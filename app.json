@@ -3,24 +3,14 @@
     "name": "Schimbare Produs",
     "slug": "stock-planner",
     "version": "1.0.0",
-    "orientation": "portrait",
-    "icon": "./assets/icon.png",
-    "userInterfaceStyle": "dark",
-    "splash": {
-      "image": "./assets/splash.png",
-      "resizeMode": "contain",
-      "backgroundColor": "#0f1923"
-    },
     "android": {
-      "adaptiveIcon": {
-        "foregroundImage": "./assets/adaptive-icon.png",
-        "backgroundColor": "#0f1923"
-      },
-      "package": "com.stockplanner.app"
+      "package": "com.stockplanner.app",
+      "versionCode": 8
     },
-    "ios": {
-      "supportsTablet": false,
-      "bundleIdentifier": "com.stockplanner.app"
+    "extra": {
+      "eas": {
+        "projectId": "76789854-7eb6-4199-9c45-135fcb11b759"
+      }
     }
   }
 }
