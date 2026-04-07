@@ -7,8 +7,9 @@
     "android": {
       "package": "com.stockplanner.app",
       "minSdkVersion": 23,
-      "targetSdkVersion": 33,
-      "versionCode": 9
+      "targetSdkVersion": 34,
+      "compileSdkVersion": 34,
+      "versionCode": 10
     },
     "extra": {
       "eas": {
