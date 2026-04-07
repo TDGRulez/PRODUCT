@@ -3,12 +3,13 @@
     "name": "Schimbare Produs",
     "slug": "stock-planner",
     "version": "1.0.0",
+    "sdkVersion": "49.0.0",
     "android": {
       "package": "com.stockplanner.app",
-      "targetSdkVersion": 35,
-      "compileSdkVersion": 35,
       "minSdkVersion": 23,
-      "versionCode": 11
+      "targetSdkVersion": 34,
+      "compileSdkVersion": 34,
+      "versionCode": 12
     },
     "extra": {
       "eas": {
