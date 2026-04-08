@@ -20,14 +20,16 @@ export default function App() {
     if(oraActuala===''||isNaN(ora)){Alert.alert('Atentie','Introduceti ora actuala.');return;}
     if(isNaN(rata)||rata<=0){Alert.alert('Atentie','Introduceti anvelope pe ora.');return;}
     if(ora<0||ora>23||minut<0||minut>59){Alert.alert('Eroare','Ora invalida.');return;}
-    const oreExtraAnvelope=(sAnvelope+extra)/rata;
-    const oreTotal=sOre+oreExtraAnvelope;
-    const totalAnvelope=sAnvelope+extra;
-    const minuteStart=ora*60+minut;
-    const minuteSchimbare=minuteStart+oreTotal*60;
-    const oraSchimbare=Math.floor(minuteSchimbare/60)%24;
-    const minutSchimbare=Math.floor(minuteSchimbare%60);
-    setRezultat({sOre,sAnvelope:Math.round(sAnvelope),extra:Math.round(extra),totalAnvelope:Math.round(totalAnvelope),oreTotal,oraSchimbare:String(oraSchimbare).padStart(2,'0'),minutSchimbare:String(minutSchimbare).padStart(2,'0'),trecePesteMiezulNoptii:minuteSchimbare>=1440});
+    // Calcul 1: stoc total
+    const totalAnvelope = sAnvelope + extra;
+    const totalOre = sOre + (extra / rata);
+    // Calcul 2: ora schimbarii doar din extra / rata
+    const oreSchimbare = extra / rata;
+    const minuteStart = ora * 60 + minut;
+    const minuteSchimbare = minuteStart + oreSchimbare * 60;
+    const oraSchimbare = Math.floor(minuteSchimbare / 60) % 24;
+    const minutSchimbare = Math.floor(minuteSchimbare % 60);
+    setRezultat({sOre,sAnvelope:Math.round(sAnvelope),extra:Math.round(extra),totalAnvelope:Math.round(totalAnvelope),totalOre,oreSchimbare,oraSchimbare:String(oraSchimbare).padStart(2,'0'),minutSchimbare:String(minutSchimbare).padStart(2,'0'),trecePesteMiezulNoptii:minuteSchimbare>=1440});
   };
   const reseteaza = () => { setStocOre('');setStocAnvelope('');setProductieExtra('');setAnvelopePerOra('');setOraActuala('');setMinutActual('');setRezultat(null); };
   return (
@@ -41,24 +43,25 @@ export default function App() {
             <View style={s.headerAccent}/>
           </View>
           <View style={s.card}>
-            <Text style={s.cardTitle}>STOC CURENT</Text>
+            <Text style={s.cardTitle}>① STOC CURENT</Text>
+            <Text style={s.hint}>Acelasi stoc exprimat in 2 unitati</Text>
             <Text style={s.label}>Stoc in ore</Text>
-            <TextInput style={s.input} placeholder="ex: 5" placeholderTextColor="#2a3f55" keyboardType="numeric" value={stocOre} onChangeText={v=>{setStocOre(v);setRezultat(null);}}/>
+            <TextInput style={s.input} placeholder="ex: 8" placeholderTextColor="#2a3f55" keyboardType="numeric" value={stocOre} onChangeText={v=>{setStocOre(v);setRezultat(null);}}/>
             <Text style={s.label}>Stoc in anvelope (buc)</Text>
-            <TextInput style={s.input} placeholder="ex: 500" placeholderTextColor="#2a3f55" keyboardType="numeric" value={stocAnvelope} onChangeText={v=>{setStocAnvelope(v);setRezultat(null);}}/>
+            <TextInput style={s.input} placeholder="ex: 150" placeholderTextColor="#2a3f55" keyboardType="numeric" value={stocAnvelope} onChangeText={v=>{setStocAnvelope(v);setRezultat(null);}}/>
           </View>
           <View style={s.card}>
-            <Text style={s.cardTitle}>PRODUCTIE SUPLIMENTARA</Text>
-            <Text style={s.label}>Anvelope produse extra (buc)</Text>
-            <TextInput style={s.input} placeholder="ex: 100" placeholderTextColor="#2a3f55" keyboardType="numeric" value={productieExtra} onChangeText={v=>{setProductieExtra(v);setRezultat(null);}}/>
+            <Text style={s.cardTitle}>② PRODUCTIE EXTRA</Text>
+            <Text style={s.label}>Anvelope produse suplimentar (buc)</Text>
+            <TextInput style={s.input} placeholder="ex: 95" placeholderTextColor="#2a3f55" keyboardType="numeric" value={productieExtra} onChangeText={v=>{setProductieExtra(v);setRezultat(null);}}/>
           </View>
           <View style={s.card}>
-            <Text style={s.cardTitle}>RATA PRODUCTIE</Text>
+            <Text style={s.cardTitle}>③ RATA PRODUCTIE</Text>
             <Text style={s.label}>Anvelope produse pe ora (buc/h)</Text>
-            <TextInput style={s.input} placeholder="ex: 100" placeholderTextColor="#2a3f55" keyboardType="numeric" value={anvelopePerOra} onChangeText={v=>{setAnvelopePerOra(v);setRezultat(null);}}/>
+            <TextInput style={s.input} placeholder="ex: 25" placeholderTextColor="#2a3f55" keyboardType="numeric" value={anvelopePerOra} onChangeText={v=>{setAnvelopePerOra(v);setRezultat(null);}}/>
           </View>
           <View style={s.card}>
-            <Text style={s.cardTitle}>ORA ACTUALA</Text>
+            <Text style={s.cardTitle}>④ ORA ACTUALA</Text>
             <View style={s.timeRow}>
               <View style={s.timeInputWrapper}>
                 <Text style={s.label}>Ore</Text>
@@ -80,13 +83,25 @@ export default function App() {
           {rezultat&&(
             <View style={s.rezultatCard}>
               <Text style={s.rezultatTitle}>REZULTAT</Text>
-              <View style={s.statRow}><Text style={s.statLabel}>Stoc in ore</Text><Text style={s.statValue}>{formatDurata(rezultat.sOre)}</Text></View>
-              <View style={s.statRow}><Text style={s.statLabel}>Stoc in anvelope</Text><Text style={s.statValue}>{rezultat.sAnvelope.toLocaleString()} buc</Text></View>
-              {rezultat.extra>0&&<View style={s.statRow}><Text style={s.statLabel}>+ Productie extra</Text><Text style={s.statValue}>{rezultat.extra.toLocaleString()} buc</Text></View>}
+              <Text style={s.sectiune}>STOC TOTAL</Text>
+              <View style={s.statRow}>
+                <Text style={s.statLabel}>Stoc initial</Text>
+                <Text style={s.statValue}>{rezultat.sAnvelope} buc = {formatDurata(rezultat.sOre)}</Text>
+              </View>
+              <View style={s.statRow}>
+                <Text style={s.statLabel}>+ Productie extra</Text>
+                <Text style={s.statValue}>{rezultat.extra} buc</Text>
+              </View>
+              <View style={s.totalRow}>
+                <Text style={s.totalLabel}>Total stoc</Text>
+                <Text style={s.totalValue}>{rezultat.totalAnvelope} buc = {formatDurata(rezultat.totalOre)}</Text>
+              </View>
               <View style={s.divider}/>
-              <View style={s.statRow}><Text style={[s.statLabel,{color:'#ccc'}]}>Total anvelope</Text><Text style={[s.statValue,{color:'#e8a020'}]}>{rezultat.totalAnvelope.toLocaleString()} buc</Text></View>
-              <View style={s.statRow}><Text style={[s.statLabel,{color:'#ccc'}]}>Durata totala stoc</Text><Text style={[s.statValue,{color:'#e8a020'}]}>{formatDurata(rezultat.oreTotal)}</Text></View>
-              <View style={s.divider}/>
+              <Text style={s.sectiune}>ORA SCHIMBARII</Text>
+              <View style={s.statRow}>
+                <Text style={s.statLabel}>Timp productie extra</Text>
+                <Text style={s.statValue}>{formatDurata(rezultat.oreSchimbare)}</Text>
+              </View>
               <Text style={s.schimbareLabel}>Schimbare dimensiune la ora:</Text>
               <Text style={s.schimbareOra}>{rezultat.oraSchimbare}:{rezultat.minutSchimbare}</Text>
               {rezultat.trecePesteMiezulNoptii&&<View style={s.warningBox}><Text style={s.warningText}>Schimbarea va fi a doua zi</Text></View>}
@@ -109,7 +124,8 @@ const s = StyleSheet.create({
   headerTitle:{color:'#ffffff',fontSize:30,fontWeight:'900',lineHeight:36},
   headerAccent:{width:44,height:4,backgroundColor:'#e8a020',borderRadius:2,marginTop:12},
   card:{backgroundColor:'#111b24',borderRadius:16,padding:20,marginBottom:14,borderWidth:1,borderColor:'#1a2d3f'},
-  cardTitle:{color:'#e8a020',fontSize:10,fontWeight:'800',letterSpacing:3,marginBottom:14},
+  cardTitle:{color:'#e8a020',fontSize:10,fontWeight:'800',letterSpacing:3,marginBottom:4},
+  hint:{color:'#2a3f55',fontSize:11,fontStyle:'italic',marginBottom:8},
   label:{color:'#4d7a99',fontSize:11,fontWeight:'600',marginBottom:8,marginTop:10},
   input:{backgroundColor:'#0a0f14',borderWidth:1,borderColor:'#1a2d3f',borderRadius:12,color:'#ffffff',fontSize:20,fontWeight:'700',paddingHorizontal:16,paddingVertical:13},
   timeRow:{flexDirection:'row',alignItems:'flex-end',gap:8},
@@ -121,12 +137,16 @@ const s = StyleSheet.create({
   calcBtn:{backgroundColor:'#e8a020',borderRadius:14,paddingVertical:18,alignItems:'center',marginBottom:16,elevation:10},
   calcBtnText:{color:'#0a0f14',fontSize:14,fontWeight:'900',letterSpacing:4},
   rezultatCard:{backgroundColor:'#111b24',borderRadius:16,padding:24,marginBottom:16,borderWidth:2,borderColor:'#e8a020'},
-  rezultatTitle:{color:'#e8a020',fontSize:10,fontWeight:'800',letterSpacing:4,marginBottom:18},
-  statRow:{flexDirection:'row',justifyContent:'space-between',alignItems:'center',paddingVertical:7},
+  rezultatTitle:{color:'#e8a020',fontSize:10,fontWeight:'800',letterSpacing:4,marginBottom:16},
+  sectiune:{color:'#4d7a99',fontSize:10,fontWeight:'700',letterSpacing:2,marginBottom:8,marginTop:4},
+  statRow:{flexDirection:'row',justifyContent:'space-between',alignItems:'center',paddingVertical:6},
   statLabel:{color:'#4d7a99',fontSize:13,fontWeight:'500'},
-  statValue:{color:'#ffffff',fontSize:15,fontWeight:'700'},
-  divider:{height:1,backgroundColor:'#1a2d3f',marginVertical:14},
-  schimbareLabel:{color:'#7a9bb5',fontSize:12,fontWeight:'600',textAlign:'center',marginBottom:6,marginTop:4},
+  statValue:{color:'#ffffff',fontSize:14,fontWeight:'700'},
+  totalRow:{flexDirection:'row',justifyContent:'space-between',alignItems:'center',paddingVertical:10,marginTop:6,backgroundColor:'#0a0f14',borderRadius:10,paddingHorizontal:12},
+  totalLabel:{color:'#ffffff',fontSize:13,fontWeight:'700'},
+  totalValue:{color:'#e8a020',fontSize:14,fontWeight:'800'},
+  divider:{height:1,backgroundColor:'#1a2d3f',marginVertical:16},
+  schimbareLabel:{color:'#7a9bb5',fontSize:12,fontWeight:'600',textAlign:'center',marginBottom:6,marginTop:8},
   schimbareOra:{color:'#e8a020',fontSize:64,fontWeight:'900',textAlign:'center',letterSpacing:6},
   warningBox:{backgroundColor:'#1f1508',borderRadius:10,padding:12,marginTop:14,borderWidth:1,borderColor:'#e8a020'},
   warningText:{color:'#e8a020',fontSize:13,fontWeight:'600',textAlign:'center'},
