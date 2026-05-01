@@ -1,15 +1,25 @@
 {
   "expo": {
-    "name": "Schimbare Produs",
+    "name": "SD",
     "slug": "stock-planner",
     "version": "1.0.0",
     "sdkVersion": "49.0.0",
+    "icon": "./icon.png",
+    "splash": {
+      "image": "./splash.png",
+      "resizeMode": "contain",
+      "backgroundColor": "#FFD200"
+    },
     "android": {
       "package": "com.stockplanner.app",
+      "adaptiveIcon": {
+        "foregroundImage": "./adaptive-icon.png",
+        "backgroundColor": "#FFD200"
+      },
       "minSdkVersion": 23,
       "targetSdkVersion": 34,
       "compileSdkVersion": 34,
-      "versionCode": 12
+      "versionCode": 14
     },
     "extra": {
       "eas": {
