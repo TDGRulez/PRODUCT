@@ -54,7 +54,7 @@ export default function App() {
     }
     const consum = mat * CPM;
     const totalAnv = vSanv + vExtra;
-    const oreStoc = totalAnv / consum;
+    const oreStoc = vSore + (vExtra / consum);
     const oreSchimbare = vExtra / vRata;
     const minStart = vOra * 60 + vMin;
     const minSch = minStart + oreSchimbare * 60;
