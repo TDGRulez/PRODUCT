@@ -1,25 +1,21 @@
 {
   "expo": {
-    "name": "SD",
+    "name": "Michelin SD",
     "slug": "stock-planner",
     "version": "1.0.0",
-    "sdkVersion": "49.0.0",
     "icon": "./icon.png",
     "splash": {
       "image": "./splash.png",
       "resizeMode": "contain",
-      "backgroundColor": "#FFD200"
+      "backgroundColor": "#FFD100"
     },
     "android": {
       "package": "com.stockplanner.app",
       "adaptiveIcon": {
         "foregroundImage": "./adaptive-icon.png",
-        "backgroundColor": "#FFD200"
+        "backgroundColor": "#FFD100"
       },
-      "minSdkVersion": 23,
-      "targetSdkVersion": 34,
-      "compileSdkVersion": 34,
-      "versionCode": 14
+      "versionCode": 15
     },
     "extra": {
       "eas": {
