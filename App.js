@@ -4,6 +4,13 @@ import { View, Text, TextInput, TouchableOpacity, ScrollView, StyleSheet, Status
 const MATRITE = [1,2,3,4,5,6,7,8,9,10,11,12,13,14,15];
 const CPM = 100/24;
 
+const Y = '#FFD100';
+const BG = '#0D0D0D';
+const CARD = '#1A1A1A';
+const BORDER = '#2A2A2A';
+const MUTED = '#555';
+const WHITE = '#FFFFFF';
+
 export default function App() {
   const [sOre, setSore] = useState('');
   const [sAnv, setSanv] = useState('');
@@ -44,111 +51,153 @@ export default function App() {
     const minSch = minStart + oreSchimbare*60;
     const oraSch = Math.floor(minSch/60)%24;
     const minSchimb = Math.floor(minSch%60);
-    const ziuaUrm = minSch >= 1440;
-    setRez({ vSore, vSanv:Math.round(vSanv), vExtra:Math.round(vExtra), totalAnv:Math.round(totalAnv), consum, oreStoc, oreSchimbare, oraSch:String(oraSch).padStart(2,'0'), minSchimb:String(minSchimb).padStart(2,'0'), ziuaUrm });
+    setRez({ vSore, vSanv:Math.round(vSanv), vExtra:Math.round(vExtra), totalAnv:Math.round(totalAnv), consum, oreStoc, oreSchimbare, oraSch:String(oraSch).padStart(2,'0'), minSchimb:String(minSchimb).padStart(2,'0'), ziuaUrm: minSch>=1440 });
   };
 
   const reset = () => { setSore(''); setSanv(''); setMat(1); setRata(''); setExtra(''); setOra(''); setMin(''); setRez(null); };
 
   return (
     <View style={st.cont}>
-      <StatusBar barStyle="light-content" backgroundColor="#0a0f14" />
+      <StatusBar barStyle="light-content" backgroundColor={BG} />
       <KeyboardAvoidingView behavior={Platform.OS==='ios'?'padding':'height'} style={{flex:1}}>
-        <ScrollView contentContainerStyle={st.scroll} keyboardShouldPersistTaps="handled">
+        <ScrollView contentContainerStyle={st.scroll} keyboardShouldPersistTaps="handled" showsVerticalScrollIndicator={false}>
 
+          {/* HEADER */}
           <View style={st.header}>
-            <Text style={st.eyebrow}>FABRICA DE ANVELOPE</Text>
-            <Text style={st.title}>Schimbare Dimensiune</Text>
-            <View style={st.accent} />
-          </View>
+            <View style={st.headerTop}>
+              <View style={st.badge}><Text style={st.badgeTxt}>MICHELIN</Text></View>
+              <Text style={st.headerSub}>Planificare Productie</Text>
+            </View>
 
-          <View style={st.secBar}>
-            <Text style={st.secTxt}>VULCANIZARE</Text>
+          {/* VULCANIZARE */}
+          <View style={st.sectionLabel}>
+            <View style={st.sectionDot} />
+            <Text style={st.sectionTxt}>VULCANIZARE</Text>
           </View>
 
           <View style={st.card}>
-            <Text style={st.cardTit}>STOC CURENT</Text>
-            <Text style={st.lbl}>Stoc in ore</Text>
-            <TextInput style={st.inp} placeholder="ex: 8" placeholderTextColor="#2a3f55" keyboardType="numeric" value={sOre} onChangeText={v=>{setSore(v);setRez(null);}} />
-            <Text style={st.lbl}>Stoc in anvelope (buc)</Text>
-            <TextInput style={st.inp} placeholder="ex: 100" placeholderTextColor="#2a3f55" keyboardType="numeric" value={sAnv} onChangeText={v=>{setSanv(v);setRez(null);}} />
-            <Text style={st.lbl}>Numar matrite active</Text>
-            <ScrollView horizontal showsHorizontalScrollIndicator={false} style={{marginTop:10,marginBottom:4}}>
+            {/* Row: Stoc ore + Stoc anvelope */}
+            <View style={st.twoCol}>
+              <View style={{flex:1, marginRight:8}}>
+                <Text style={st.lbl}>Stoc (ore)</Text>
+                <TextInput style={st.inp} placeholder="ex: 8" placeholderTextColor={MUTED} keyboardType="numeric" value={sOre} onChangeText={v=>{setSore(v);setRez(null);}} />
+              </View>
+              <View style={{flex:1}}>
+                <Text style={st.lbl}>Stoc (buc)</Text>
+                <TextInput style={st.inp} placeholder="ex: 100" placeholderTextColor={MUTED} keyboardType="numeric" value={sAnv} onChangeText={v=>{setSanv(v);setRez(null);}} />
+              </View>
+            </View>
+
+            <View style={st.divider} />
+
+            {/* Matrite */}
+            <Text style={st.lbl}>Matrite active</Text>
+            <ScrollView horizontal showsHorizontalScrollIndicator={false} style={{marginTop:8}}>
               {MATRITE.map(n => (
                 <TouchableOpacity key={n} style={[st.mBtn, mat===n && st.mBtnA]} onPress={()=>{setMat(n);setRez(null);}}>
                   <Text style={[st.mTxt, mat===n && st.mTxtA]}>{n}</Text>
                 </TouchableOpacity>
               ))}
             </ScrollView>
-            <Text style={st.hint}>Consum: {(mat*CPM).toFixed(1)} buc/ora ({mat} matrite x 4.17)</Text>
+            <View style={st.infoRow}>
+              <Text style={st.infoTxt}>Consum:</Text>
+              <Text style={st.infoVal}>{(mat*CPM).toFixed(1)} buc/ora</Text>
+              <Text style={st.infoTxt}>({mat} x 4.17)</Text>
+            </View>
           </View>
 
-          <View style={st.secBar}>
-            <Text style={st.secTxt}>CONFECTIONARE</Text>
+          {/* CONFECTIONARE */}
+          <View style={st.sectionLabel}>
+            <View style={[st.sectionDot, {backgroundColor:'#FFF'}]} />
+            <Text style={st.sectionTxt}>CONFECTIE</Text>
           </View>
 
           <View style={st.card}>
-            <Text style={st.cardTit}>PRODUCTIE EXTRA</Text>
-            <Text style={st.lbl}>Anvelope produse pe ora (buc/h)</Text>
-            <TextInput style={st.inp} placeholder="ex: 25" placeholderTextColor="#2a3f55" keyboardType="numeric" value={rata} onChangeText={v=>{setRata(v);setRez(null);}} />
-            <Text style={st.lbl}>Total anvelope de produs (buc)</Text>
-            <TextInput style={st.inp} placeholder="ex: 100" placeholderTextColor="#2a3f55" keyboardType="numeric" value={extra} onChangeText={v=>{setExtra(v);setRez(null);}} />
+            <View style={st.twoCol}>
+              <View style={{flex:1, marginRight:8}}>
+                <Text style={st.lbl}>Rata (buc/h)</Text>
+                <TextInput style={st.inp} placeholder="ex: 25" placeholderTextColor={MUTED} keyboardType="numeric" value={rata} onChangeText={v=>{setRata(v);setRez(null);}} />
+              </View>
+              <View style={{flex:1}}>
+                <Text style={st.lbl}>Total de produs</Text>
+                <TextInput style={st.inp} placeholder="ex: 100" placeholderTextColor={MUTED} keyboardType="numeric" value={extra} onChangeText={v=>{setExtra(v);setRez(null);}} />
+              </View>
+            </View>
           </View>
 
+          {/* ORA */}
           <View style={st.card}>
-            <Text style={st.cardTit}>ORA ACTUALA</Text>
-            <View style={st.tRow}>
+            <View style={st.timeWrap}>
               <View style={{flex:1}}>
-                <Text style={st.lbl}>Ore</Text>
-                <TextInput style={[st.inp,{textAlign:'center'}]} placeholder="HH" placeholderTextColor="#2a3f55" keyboardType="numeric" maxLength={2} value={ora} onChangeText={v=>{setOra(v);setRez(null);}} />
+                <Text style={st.lbl}>Ora curenta</Text>
+                <View style={st.timeRow}>
+                  <TextInput style={[st.inp, st.timeInp]} placeholder="HH" placeholderTextColor={MUTED} keyboardType="numeric" maxLength={2} value={ora} onChangeText={v=>{setOra(v);setRez(null);}} />
+                  <Text style={st.timeSep}>:</Text>
+                  <TextInput style={[st.inp, st.timeInp]} placeholder="MM" placeholderTextColor={MUTED} keyboardType="numeric" maxLength={2} value={min} onChangeText={v=>{setMin(v);setRez(null);}} />
+                </View>
               </View>
-              <Text style={st.tSep}>:</Text>
-              <View style={{flex:1}}>
-                <Text style={st.lbl}>Minute</Text>
-                <TextInput style={[st.inp,{textAlign:'center'}]} placeholder="MM" placeholderTextColor="#2a3f55" keyboardType="numeric" maxLength={2} value={min} onChangeText={v=>{setMin(v);setRez(null);}} />
-              </View>
-              <TouchableOpacity style={st.nowBtn} onPress={acum}>
-                <Text style={st.nowTxt}>ACUM</Text>
+              <TouchableOpacity style={st.acumBtn} onPress={acum}>
+                <Text style={st.acumLine1}>ORA</Text>
+                <Text style={st.acumLine2}>ACUM</Text>
               </TouchableOpacity>
             </View>
           </View>
 
-          <TouchableOpacity style={st.calcBtn} onPress={calc}>
+          {/* BUTON CALCUL */}
+          <TouchableOpacity style={st.calcBtn} onPress={calc} activeOpacity={0.85}>
             <Text style={st.calcTxt}>CALCULEAZA</Text>
+            <View style={st.calcArrow}><Text style={st.calcArrowTxt}>→</Text></View>
           </TouchableOpacity>
 
+          {/* REZULTAT */}
           {rez && (
-            <View style={st.rezCard}>
-              <Text style={st.rezTit}>REZULTAT</Text>
-
-              <Text style={st.sec}>STOC VULCANIZARE</Text>
-              <View style={st.row}><Text style={st.rLbl}>Stoc initial</Text><Text style={st.rVal}>{rez.vSanv} buc / {fmt(rez.vSore)}</Text></View>
-              <View style={st.row}><Text style={st.rLbl}>+ Productie extra</Text><Text style={st.rVal}>{rez.vExtra} buc</Text></View>
-              <View style={st.row}><Text style={st.rLbl}>Consum matrite</Text><Text style={st.rVal}>{rez.consum.toFixed(1)} buc/ora</Text></View>
-              <View style={st.totRow}>
-                <Text style={st.totLbl}>Stoc total</Text>
-                <Text style={st.totVal}>{rez.totalAnv} buc = {fmt(rez.oreStoc)}</Text>
+            <View style={st.rezWrap}>
+              {/* Stoc vulcanizare */}
+              <View style={st.rezCard}>
+                <Text style={st.rezSec}>STOC VULCANIZARE</Text>
+                <View style={st.rezRow}>
+                  <View style={st.rezItem}>
+                    <Text style={st.rezItemLbl}>Initial</Text>
+                    <Text style={st.rezItemVal}>{rez.vSanv}<Text style={st.rezItemUnit}> buc</Text></Text>
+                    <Text style={st.rezItemSub}>{fmt(rez.vSore)}</Text>
+                  </View>
+                  <View style={st.rezPlus}><Text style={st.rezPlusTxt}>+</Text></View>
+                  <View style={st.rezItem}>
+                    <Text style={st.rezItemLbl}>Extra</Text>
+                    <Text style={st.rezItemVal}>{rez.vExtra}<Text style={st.rezItemUnit}> buc</Text></Text>
+                    <Text style={st.rezItemSub}>{fmt(rez.oreSchimbare)}</Text>
+                  </View>
+                  <View style={st.rezPlus}><Text style={st.rezPlusTxt}>=</Text></View>
+                  <View style={[st.rezItem, st.rezItemHL]}>
+                    <Text style={[st.rezItemLbl, {color:BG}]}>Total</Text>
+                    <Text style={[st.rezItemVal, {color:BG}]}>{rez.totalAnv}<Text style={[st.rezItemUnit, {color:BG}]}> buc</Text></Text>
+                    <Text style={[st.rezItemSub, {color:BG, fontWeight:'700'}]}>{fmt(rez.oreStoc)}</Text>
+                  </View>
+                </View>
+                <View style={st.consumBar}>
+                  <Text style={st.consumTxt}>Consum matrite: {rez.consum.toFixed(1)} buc/ora</Text>
+                </View>
               </View>
 
-              <View style={st.div} />
-
-              <Text style={st.sec}>SCHIMBARE CONFECTIONARE</Text>
-              <View style={st.row}><Text style={st.rLbl}>Timp productie extra</Text><Text style={st.rVal}>{fmt(rez.oreSchimbare)}</Text></View>
-              <Text style={st.schLbl}>Schimbare dimensiune la ora:</Text>
-              <Text style={st.schOra}>{rez.oraSch}:{rez.minSchimb}</Text>
-              {rez.ziuaUrm && (
-                <View style={st.warn}>
-                  <Text style={st.warnTxt}>Schimbarea va fi a doua zi</Text>
-                </View>
-              )}
+              {/* Ora schimbarii */}
+              <View style={st.schCard}>
+                <Text style={st.schLabel}>SCHIMBARE DIMENSIUNE</Text>
+                <Text style={st.schOra}>{rez.oraSch}:{rez.minSchimb}</Text>
+                <Text style={st.schSub}>Timp productie extra: {fmt(rez.oreSchimbare)}</Text>
+                {rez.ziuaUrm && (
+                  <View style={st.warn}>
+                    <Text style={st.warnTxt}>⚠ Schimbarea va fi a doua zi</Text>
+                  </View>
+                )}
+              </View>
             </View>
           )}
 
           <TouchableOpacity style={st.resetBtn} onPress={reset}>
-            <Text style={st.resetTxt}>RESETEAZA</Text>
+            <Text style={st.resetTxt}>↺  RESETEAZA</Text>
           </TouchableOpacity>
 
-          <View style={{height:50}} />
+          <View style={{height:40}} />
         </ScrollView>
       </KeyboardAvoidingView>
     </View>
@@ -156,43 +205,73 @@ export default function App() {
 }
 
 const st = StyleSheet.create({
-  cont:{flex:1,backgroundColor:'#0a0f14'},
-  scroll:{padding:20,paddingTop:50},
-  header:{marginBottom:24},
-  eyebrow:{color:'#e8a020',fontSize:10,fontWeight:'800',letterSpacing:4,marginBottom:6},
-  title:{color:'#fff',fontSize:28,fontWeight:'900'},
-  accent:{width:44,height:4,backgroundColor:'#e8a020',borderRadius:2,marginTop:12},
-  secBar:{backgroundColor:'#1a2d3f',borderRadius:10,paddingVertical:8,paddingHorizontal:14,marginBottom:10},
-  secTxt:{color:'#7ab8d4',fontSize:11,fontWeight:'800',letterSpacing:4},
-  card:{backgroundColor:'#111b24',borderRadius:16,padding:20,marginBottom:14,borderWidth:1,borderColor:'#1a2d3f'},
-  cardTit:{color:'#e8a020',fontSize:10,fontWeight:'800',letterSpacing:3,marginBottom:4},
-  hint:{color:'#2a4a5f',fontSize:11,fontStyle:'italic',marginTop:8},
-  lbl:{color:'#4d7a99',fontSize:11,fontWeight:'600',marginBottom:8,marginTop:10},
-  inp:{backgroundColor:'#0a0f14',borderWidth:1,borderColor:'#1a2d3f',borderRadius:12,color:'#fff',fontSize:20,fontWeight:'700',paddingHorizontal:16,paddingVertical:13},
-  mBtn:{width:44,height:44,borderRadius:10,alignItems:'center',justifyContent:'center',backgroundColor:'#0a0f14',borderWidth:1,borderColor:'#1a2d3f',marginRight:8},
-  mBtnA:{backgroundColor:'#e8a020',borderColor:'#e8a020'},
-  mTxt:{color:'#3d5a73',fontWeight:'700',fontSize:15},
-  mTxtA:{color:'#0a0f14'},
-  tRow:{flexDirection:'row',alignItems:'flex-end',gap:8},
-  tSep:{color:'#fff',fontSize:26,fontWeight:'800',marginBottom:13},
-  nowBtn:{backgroundColor:'#0a0f14',borderRadius:12,paddingHorizontal:14,paddingVertical:14,alignSelf:'flex-end',borderWidth:1,borderColor:'#e8a020'},
-  nowTxt:{color:'#e8a020',fontWeight:'800',fontSize:10,letterSpacing:2},
-  calcBtn:{backgroundColor:'#e8a020',borderRadius:14,paddingVertical:18,alignItems:'center',marginBottom:16,elevation:10},
-  calcTxt:{color:'#0a0f14',fontSize:14,fontWeight:'900',letterSpacing:4},
-  rezCard:{backgroundColor:'#111b24',borderRadius:16,padding:24,marginBottom:16,borderWidth:2,borderColor:'#e8a020'},
-  rezTit:{color:'#e8a020',fontSize:10,fontWeight:'800',letterSpacing:4,marginBottom:16},
-  sec:{color:'#4d7a99',fontSize:10,fontWeight:'700',letterSpacing:2,marginBottom:8,marginTop:4},
-  row:{flexDirection:'row',justifyContent:'space-between',alignItems:'center',paddingVertical:6},
-  rLbl:{color:'#4d7a99',fontSize:13,fontWeight:'500'},
-  rVal:{color:'#fff',fontSize:14,fontWeight:'700'},
-  totRow:{flexDirection:'row',justifyContent:'space-between',alignItems:'center',paddingVertical:10,marginTop:8,backgroundColor:'#0a0f14',borderRadius:10,paddingHorizontal:12},
-  totLbl:{color:'#fff',fontSize:13,fontWeight:'700'},
-  totVal:{color:'#e8a020',fontSize:14,fontWeight:'800'},
-  div:{height:1,backgroundColor:'#1a2d3f',marginVertical:14},
-  schLbl:{color:'#7a9bb5',fontSize:12,fontWeight:'600',textAlign:'center',marginBottom:6,marginTop:8},
-  schOra:{color:'#e8a020',fontSize:64,fontWeight:'900',textAlign:'center',letterSpacing:6},
-  warn:{backgroundColor:'#1f1508',borderRadius:10,padding:12,marginTop:14,borderWidth:1,borderColor:'#e8a020'},
-  warnTxt:{color:'#e8a020',fontSize:13,fontWeight:'600',textAlign:'center'},
-  resetBtn:{borderRadius:14,paddingVertical:15,alignItems:'center',borderWidth:1,borderColor:'#1a2d3f'},
-  resetTxt:{color:'#2a3f55',fontSize:12,fontWeight:'700',letterSpacing:3},
+  cont: { flex:1, backgroundColor:BG },
+  scroll: { padding:16, paddingTop:Platform.OS==='android'?44:64 },
+
+  header: { marginBottom:24 },
+  headerTop: { flexDirection:'row', alignItems:'center', gap:10, marginBottom:12 },
+  badge: { backgroundColor:Y, paddingHorizontal:10, paddingVertical:4, borderRadius:4 },
+  badgeTxt: { color:BG, fontWeight:'900', fontSize:10, letterSpacing:2 },
+  headerSub: { color:MUTED, fontSize:12, fontWeight:'500' },
+  headerTitle: { color:WHITE, fontSize:36, fontWeight:'900', lineHeight:40, letterSpacing:-0.5 },
+  headerLine: { width:60, height:3, backgroundColor:Y, borderRadius:2, marginTop:14 },
+
+  sectionLabel: { flexDirection:'row', alignItems:'center', gap:8, marginBottom:8, marginTop:4 },
+  sectionDot: { width:8, height:8, borderRadius:4, backgroundColor:Y },
+  sectionTxt: { color:MUTED, fontSize:10, fontWeight:'800', letterSpacing:3 },
+
+  card: { backgroundColor:CARD, borderRadius:14, padding:16, marginBottom:10, borderWidth:1, borderColor:BORDER },
+
+  twoCol: { flexDirection:'row' },
+  lbl: { color:MUTED, fontSize:10, fontWeight:'700', letterSpacing:1, marginBottom:6 },
+  inp: { backgroundColor:BG, borderWidth:1, borderColor:BORDER, borderRadius:10, color:WHITE, fontSize:18, fontWeight:'800', paddingHorizontal:14, paddingVertical:11 },
+  divider: { height:1, backgroundColor:BORDER, marginVertical:14 },
+
+  mBtn: { width:40, height:40, borderRadius:8, alignItems:'center', justifyContent:'center', backgroundColor:BG, borderWidth:1, borderColor:BORDER, marginRight:6 },
+  mBtnA: { backgroundColor:Y, borderColor:Y },
+  mTxt: { color:MUTED, fontWeight:'800', fontSize:14 },
+  mTxtA: { color:BG },
+
+  infoRow: { flexDirection:'row', alignItems:'center', gap:6, marginTop:10 },
+  infoTxt: { color:MUTED, fontSize:11 },
+  infoVal: { color:Y, fontSize:12, fontWeight:'800' },
+
+  timeWrap: { flexDirection:'row', alignItems:'flex-end', gap:12 },
+  timeRow: { flexDirection:'row', alignItems:'center', gap:6 },
+  timeInp: { flex:1, textAlign:'center', fontSize:22 },
+  timeSep: { color:WHITE, fontSize:22, fontWeight:'900' },
+  acumBtn: { backgroundColor:Y, borderRadius:10, paddingHorizontal:16, paddingVertical:12, alignItems:'center', marginBottom:0 },
+  acumLine1: { color:BG, fontSize:9, fontWeight:'900', letterSpacing:2 },
+  acumLine2: { color:BG, fontSize:9, fontWeight:'900', letterSpacing:2 },
+
+  calcBtn: { backgroundColor:Y, borderRadius:14, paddingVertical:18, paddingHorizontal:24, flexDirection:'row', alignItems:'center', justifyContent:'space-between', marginBottom:12, marginTop:4 },
+  calcTxt: { color:BG, fontSize:16, fontWeight:'900', letterSpacing:3 },
+  calcArrow: { backgroundColor:BG, width:36, height:36, borderRadius:18, alignItems:'center', justifyContent:'center' },
+  calcArrowTxt: { color:Y, fontSize:18, fontWeight:'900' },
+
+  rezWrap: { gap:10, marginBottom:12 },
+
+  rezCard: { backgroundColor:CARD, borderRadius:14, padding:16, borderWidth:1, borderColor:BORDER },
+  rezSec: { color:MUTED, fontSize:10, fontWeight:'800', letterSpacing:3, marginBottom:14 },
+  rezRow: { flexDirection:'row', alignItems:'center', gap:4 },
+  rezItem: { flex:1, backgroundColor:BG, borderRadius:10, padding:10, alignItems:'center' },
+  rezItemHL: { backgroundColor:Y },
+  rezItemLbl: { color:MUTED, fontSize:9, fontWeight:'700', letterSpacing:1, marginBottom:4 },
+  rezItemVal: { color:WHITE, fontSize:16, fontWeight:'900' },
+  rezItemUnit: { fontSize:10, fontWeight:'500' },
+  rezItemSub: { color:MUTED, fontSize:10, marginTop:2 },
+  rezPlus: { alignItems:'center', justifyContent:'center', paddingHorizontal:2 },
+  rezPlusTxt: { color:MUTED, fontSize:18, fontWeight:'900' },
+  consumBar: { backgroundColor:BG, borderRadius:8, padding:8, marginTop:12, alignItems:'center' },
+  consumTxt: { color:MUTED, fontSize:11, fontWeight:'600' },
+
+  schCard: { backgroundColor:Y, borderRadius:14, padding:20, alignItems:'center' },
+  schLabel: { color:BG, fontSize:10, fontWeight:'800', letterSpacing:3, marginBottom:8 },
+  schOra: { color:BG, fontSize:72, fontWeight:'900', letterSpacing:4, lineHeight:76 },
+  schSub: { color:BG, fontSize:12, fontWeight:'600', opacity:0.7, marginTop:6 },
+  warn: { backgroundColor:BG, borderRadius:8, padding:10, marginTop:12 },
+  warnTxt: { color:Y, fontSize:12, fontWeight:'700', textAlign:'center' },
+
+  resetBtn: { borderRadius:14, paddingVertical:14, alignItems:'center', borderWidth:1, borderColor:BORDER },
+  resetTxt: { color:MUTED, fontSize:12, fontWeight:'700', letterSpacing:2 },
 });
