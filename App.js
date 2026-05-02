@@ -1,8 +1,6 @@
 import React, { useState } from 'react';
 import { View, Text, TextInput, TouchableOpacity, ScrollView, StyleSheet, StatusBar, KeyboardAvoidingView, Platform, Alert } from 'react-native';
 
-const MATRITE = [1,2,3,4,5,6,7,8,9,10,11,12,13,14,15];
-const CPM = 100/24;
 const Y = '#FFD100';
 const BG = '#0D0D0D';
 const CARD = '#1A1A1A';
@@ -11,11 +9,10 @@ const MUTED = '#555555';
 const WHITE = '#FFFFFF';
 
 export default function App() {
-  const [sOre, setSore] = useState('');
-  const [sAnv, setSanv] = useState('');
-  const [mat, setMat] = useState(1);
-  const [rata, setRata] = useState('');
-  const [extra, setExtra] = useState('');
+  const [stocOre, setStocOre] = useState('');
+  const [stocBuc, setStocBuc] = useState('');
+  const [rataConf, setRataConf] = useState('');
+  const [totalFabric, setTotalFabric] = useState('');
   const [ora, setOra] = useState('');
   const [min, setMin] = useState('');
   const [rez, setRez] = useState(null);
@@ -27,6 +24,7 @@ export default function App() {
   };
 
   const fmt = (h) => {
+    if (h < 0) h = 0;
     const hh = Math.floor(h);
     const mm = Math.round((h - hh) * 60);
     if (mm === 0) return hh + 'h';
@@ -34,40 +32,64 @@ export default function App() {
   };
 
   const calc = () => {
-    const vSore = parseFloat(sOre) || 0;
-    const vSanv = parseFloat(sAnv) || 0;
-    const vRata = parseFloat(rata);
-    const vExtra = parseFloat(extra) || 0;
+    const vStocOre = parseFloat(stocOre);
+    const vStocBuc = parseFloat(stocBuc);
+    const vRataConf = parseFloat(rataConf);
+    const vTotalFabric = parseFloat(totalFabric);
     const vOra = parseInt(ora);
     const vMin = parseInt(min) || 0;
-    if (isNaN(vOra) || ora === '') {
-      Alert.alert('Atentie', 'Introduceti ora actuala.');
+
+    if (isNaN(vStocOre) || isNaN(vStocBuc)) {
+      Alert.alert('Atentie', 'Introduceti stocul in ore si in bucati.');
       return;
     }
-    if (isNaN(vRata) || vRata <= 0) {
-      Alert.alert('Atentie', 'Introduceti rata de confectionare.');
+    if (vStocOre <= 0 || vStocBuc <= 0) {
+      Alert.alert('Atentie', 'Stocul trebuie sa fie mai mare decat 0.');
+      return;
+    }
+    if (isNaN(vRataConf) || vRataConf <= 0) {
+      Alert.alert('Atentie', 'Introduceti rata de fabricatie.');
+      return;
+    }
+    if (isNaN(vTotalFabric) || vTotalFabric <= 0) {
+      Alert.alert('Atentie', 'Introduceti numarul de anvelope de fabricat.');
+      return;
+    }
+    if (isNaN(vOra) || ora === '') {
+      Alert.alert('Atentie', 'Introduceti ora actuala.');
       return;
     }
     if (vOra < 0 || vOra > 23 || vMin < 0 || vMin > 59) {
       Alert.alert('Eroare', 'Ora invalida.');
       return;
     }
-    const consum = mat * CPM;
-    const totalAnv = vSanv + vExtra;
-    const oreStoc = vSore + (vExtra / consum);
-    const oreSchimbare = vExtra / vRata;
+
+    // Rata consum vulcanizare calculata automat
+    const rataConsum = vStocBuc / vStocOre;
+
+    // Timp productie confectie
+    const timpConf = vTotalFabric / vRataConf;
+
+    // Consum vulcanizare in timpul productiei
+    const consumInTimpul = rataConsum * timpConf;
+
+    // Stoc total = stoc initial + fabricate - consum vulcanizare
+    const stocFinal = vStocBuc + vTotalFabric - consumInTimpul;
+    const oreFinal = stocFinal / rataConsum;
+
+    // Ora schimbarii
     const minStart = vOra * 60 + vMin;
-    const minSch = minStart + oreSchimbare * 60;
+    const minSch = minStart + timpConf * 60;
     const oraSch = Math.floor(minSch / 60) % 24;
     const minSchimb = Math.floor(minSch % 60);
+
     setRez({
-      vSore,
-      vSanv: Math.round(vSanv),
-      vExtra: Math.round(vExtra),
-      totalAnv: Math.round(totalAnv),
-      consum,
-      oreStoc,
-      oreSchimbare,
+      rataConsum,
+      timpConf,
+      consumInTimpul,
+      stocFinal: Math.round(stocFinal),
+      oreFinal,
+      vTotalFabric: Math.round(vTotalFabric),
       oraSch: String(oraSch).padStart(2, '0'),
       minSchimb: String(minSchimb).padStart(2, '0'),
       ziuaUrm: minSch >= 1440,
@@ -75,15 +97,18 @@ export default function App() {
   };
 
   const reset = () => {
-    setSore('');
-    setSanv('');
-    setMat(1);
-    setRata('');
-    setExtra('');
+    setStocOre('');
+    setStocBuc('');
+    setRataConf('');
+    setTotalFabric('');
     setOra('');
     setMin('');
     setRez(null);
   };
+
+  const rataCalculata = (parseFloat(stocBuc) > 0 && parseFloat(stocOre) > 0)
+    ? (parseFloat(stocBuc) / parseFloat(stocOre)).toFixed(1)
+    : null;
 
   return (
     <View style={st.cont}>
@@ -107,89 +132,79 @@ export default function App() {
             <View style={st.headerLine} />
           </View>
 
+          {/* RUBRICA 1 - VULCANIZARE */}
           <View style={st.sectionLabel}>
             <View style={st.sectionDot} />
-            <Text style={st.sectionTxt}>VULCANIZARE</Text>
+            <Text style={st.sectionTxt}>RUBRICA 1 — VULCANIZARE</Text>
           </View>
 
           <View style={st.card}>
             <View style={st.twoCol}>
               <View style={{ flex: 1, marginRight: 8 }}>
-                <Text style={st.lbl}>STOC (ORE)</Text>
+                <Text style={st.lbl}>STOC INITIAL (ORE)</Text>
                 <TextInput
                   style={st.inp}
-                  placeholder="ex: 8"
+                  placeholder="ex: 24"
                   placeholderTextColor={MUTED}
                   keyboardType="numeric"
-                  value={sOre}
-                  onChangeText={v => { setSore(v); setRez(null); }}
+                  value={stocOre}
+                  onChangeText={v => { setStocOre(v); setRez(null); }}
                 />
               </View>
               <View style={{ flex: 1 }}>
-                <Text style={st.lbl}>STOC (BUC)</Text>
+                <Text style={st.lbl}>STOC INITIAL (BUC)</Text>
                 <TextInput
                   style={st.inp}
                   placeholder="ex: 100"
                   placeholderTextColor={MUTED}
                   keyboardType="numeric"
-                  value={sAnv}
-                  onChangeText={v => { setSanv(v); setRez(null); }}
+                  value={stocBuc}
+                  onChangeText={v => { setStocBuc(v); setRez(null); }}
                 />
               </View>
             </View>
-
-            <View style={st.divider} />
-
-            <Text style={st.lbl}>MATRITE ACTIVE</Text>
-            <ScrollView horizontal showsHorizontalScrollIndicator={false} style={{ marginTop: 8 }}>
-              {MATRITE.map(n => (
-                <TouchableOpacity
-                  key={n}
-                  style={[st.mBtn, mat === n && st.mBtnA]}
-                  onPress={() => { setMat(n); setRez(null); }}>
-                  <Text style={[st.mTxt, mat === n && st.mTxtA]}>{n}</Text>
-                </TouchableOpacity>
-              ))}
-            </ScrollView>
-            <View style={st.infoRow}>
-              <Text style={st.infoTxt}>Consum:</Text>
-              <Text style={st.infoVal}>{(mat * CPM).toFixed(1)} buc/ora</Text>
-              <Text style={st.infoTxt}>({mat} x 4.17)</Text>
-            </View>
+            {rataCalculata && (
+              <View style={st.infoRow}>
+                <Text style={st.infoTxt}>Rata consum vulcanizare:</Text>
+                <Text style={st.infoVal}>{rataCalculata} buc/ora</Text>
+              </View>
+            )}
           </View>
 
+          {/* RUBRICA 2 - CONFECTIE */}
           <View style={st.sectionLabel}>
             <View style={[st.sectionDot, { backgroundColor: WHITE }]} />
-            <Text style={st.sectionTxt}>CONFECTIONARE</Text>
+            <Text style={st.sectionTxt}>RUBRICA 2 — CONFECTIE</Text>
           </View>
 
           <View style={st.card}>
             <View style={st.twoCol}>
               <View style={{ flex: 1, marginRight: 8 }}>
-                <Text style={st.lbl}>RATA (BUC/H)</Text>
+                <Text style={st.lbl}>RATA FABRICATIE (BUC/H)</Text>
                 <TextInput
                   style={st.inp}
                   placeholder="ex: 25"
                   placeholderTextColor={MUTED}
                   keyboardType="numeric"
-                  value={rata}
-                  onChangeText={v => { setRata(v); setRez(null); }}
+                  value={rataConf}
+                  onChangeText={v => { setRataConf(v); setRez(null); }}
                 />
               </View>
               <View style={{ flex: 1 }}>
-                <Text style={st.lbl}>TOTAL DE PRODUS</Text>
+                <Text style={st.lbl}>TOTAL DE FABRICAT (BUC)</Text>
                 <TextInput
                   style={st.inp}
                   placeholder="ex: 100"
                   placeholderTextColor={MUTED}
                   keyboardType="numeric"
-                  value={extra}
-                  onChangeText={v => { setExtra(v); setRez(null); }}
+                  value={totalFabric}
+                  onChangeText={v => { setTotalFabric(v); setRez(null); }}
                 />
               </View>
             </View>
           </View>
 
+          {/* ORA ACTUALA */}
           <View style={st.card}>
             <View style={st.timeWrap}>
               <View style={{ flex: 1 }}>
@@ -229,44 +244,60 @@ export default function App() {
             </View>
           </TouchableOpacity>
 
+          {/* RUBRICA 3 - REZULTAT */}
           {rez !== null && (
             <View style={{ gap: 10, marginBottom: 12 }}>
+
+              <View style={st.sectionLabel}>
+                <View style={[st.sectionDot, { backgroundColor: Y }]} />
+                <Text style={st.sectionTxt}>RUBRICA 3 — CALCUL STOC</Text>
+              </View>
+
               <View style={st.rezCard}>
-                <Text style={st.rezSec}>STOC VULCANIZARE</Text>
                 <View style={st.rezRow}>
                   <View style={st.rezItem}>
-                    <Text style={st.rezLbl}>INITIAL</Text>
-                    <Text style={st.rezVal}>{rez.vSanv} buc</Text>
-                    <Text style={st.rezSub}>{fmt(rez.vSore)}</Text>
+                    <Text style={st.rezLbl}>STOC INITIAL</Text>
+                    <Text style={st.rezVal}>{parseFloat(stocBuc)} buc</Text>
+                    <Text style={st.rezSub}>{fmt(parseFloat(stocOre))}</Text>
                   </View>
                   <Text style={st.rezPlus}>+</Text>
                   <View style={st.rezItem}>
-                    <Text style={st.rezLbl}>EXTRA</Text>
-                    <Text style={st.rezVal}>{rez.vExtra} buc</Text>
-                    <Text style={st.rezSub}>{fmt(rez.oreSchimbare)}</Text>
+                    <Text style={st.rezLbl}>FABRICATE</Text>
+                    <Text style={st.rezVal}>{rez.vTotalFabric} buc</Text>
+                    <Text style={st.rezSub}>{fmt(rez.timpConf)}</Text>
                   </View>
-                  <Text style={st.rezPlus}>=</Text>
-                  <View style={[st.rezItem, st.rezItemHL]}>
-                    <Text style={[st.rezLbl, { color: BG }]}>TOTAL</Text>
-                    <Text style={[st.rezVal, { color: BG }]}>{rez.totalAnv} buc</Text>
-                    <Text style={[st.rezSub, { color: BG, fontWeight: '700' }]}>{fmt(rez.oreStoc)}</Text>
+                  <Text style={st.rezPlus}>-</Text>
+                  <View style={st.rezItem}>
+                    <Text style={st.rezLbl}>CONSUM VULC.</Text>
+                    <Text style={st.rezVal}>{Math.round(rez.consumInTimpul)} buc</Text>
+                    <Text style={st.rezSub}>{rez.rataConsum.toFixed(1)} buc/h</Text>
                   </View>
                 </View>
-                <View style={st.consumBar}>
-                  <Text style={st.consumTxt}>Consum matrite: {rez.consum.toFixed(1)} buc/ora</Text>
+
+                <View style={st.totalBox}>
+                  <View style={{ flex: 1 }}>
+                    <Text style={st.totalLbl}>STOC FINAL</Text>
+                    <Text style={st.totalVal}>{rez.stocFinal} buc</Text>
+                  </View>
+                  <View style={st.totalDivider} />
+                  <View style={{ flex: 1, alignItems: 'flex-end' }}>
+                    <Text style={st.totalLbl}>DURATA STOC</Text>
+                    <Text style={st.totalVal}>{fmt(rez.oreFinal)}</Text>
+                  </View>
                 </View>
               </View>
 
               <View style={st.schCard}>
-                <Text style={st.schLabel}>SCHIMBARE DIMENSIUNE</Text>
+                <Text style={st.schLabel}>SCHIMBARE MASINA CONFECTIE</Text>
                 <Text style={st.schOra}>{rez.oraSch}:{rez.minSchimb}</Text>
-                <Text style={st.schSub}>Timp productie extra: {fmt(rez.oreSchimbare)}</Text>
+                <Text style={st.schSub}>Timp fabricatie: {fmt(rez.timpConf)}</Text>
                 {rez.ziuaUrm && (
                   <View style={st.warn}>
                     <Text style={st.warnTxt}>Schimbarea va fi a doua zi</Text>
                   </View>
                 )}
               </View>
+
             </View>
           )}
 
@@ -299,14 +330,9 @@ const st = StyleSheet.create({
   twoCol: { flexDirection: 'row' },
   lbl: { color: MUTED, fontSize: 10, fontWeight: '700', letterSpacing: 1, marginBottom: 6 },
   inp: { backgroundColor: BG, borderWidth: 1, borderColor: BORDER, borderRadius: 10, color: WHITE, fontSize: 18, fontWeight: '800', paddingHorizontal: 14, paddingVertical: 11 },
-  divider: { height: 1, backgroundColor: BORDER, marginVertical: 14 },
-  mBtn: { width: 40, height: 40, borderRadius: 8, alignItems: 'center', justifyContent: 'center', backgroundColor: BG, borderWidth: 1, borderColor: BORDER, marginRight: 6 },
-  mBtnA: { backgroundColor: Y, borderColor: Y },
-  mTxt: { color: MUTED, fontWeight: '800', fontSize: 14 },
-  mTxtA: { color: BG },
-  infoRow: { flexDirection: 'row', alignItems: 'center', gap: 6, marginTop: 10 },
+  infoRow: { flexDirection: 'row', alignItems: 'center', gap: 8, marginTop: 12, backgroundColor: BG, borderRadius: 8, padding: 10 },
   infoTxt: { color: MUTED, fontSize: 11 },
-  infoVal: { color: Y, fontSize: 12, fontWeight: '800' },
+  infoVal: { color: Y, fontSize: 13, fontWeight: '800' },
   timeWrap: { flexDirection: 'row', alignItems: 'flex-end', gap: 12 },
   timeRow: { flexDirection: 'row', alignItems: 'center', gap: 6 },
   timeInp: { flex: 1, textAlign: 'center', fontSize: 22 },
@@ -318,16 +344,16 @@ const st = StyleSheet.create({
   calcArrow: { backgroundColor: BG, width: 36, height: 36, borderRadius: 18, alignItems: 'center', justifyContent: 'center' },
   calcArrowTxt: { color: Y, fontSize: 20, fontWeight: '900' },
   rezCard: { backgroundColor: CARD, borderRadius: 14, padding: 16, borderWidth: 1, borderColor: BORDER },
-  rezSec: { color: MUTED, fontSize: 10, fontWeight: '800', letterSpacing: 3, marginBottom: 14 },
-  rezRow: { flexDirection: 'row', alignItems: 'center', gap: 4 },
-  rezItem: { flex: 1, backgroundColor: BG, borderRadius: 10, padding: 10, alignItems: 'center' },
-  rezItemHL: { backgroundColor: Y },
-  rezLbl: { color: MUTED, fontSize: 9, fontWeight: '700', letterSpacing: 1, marginBottom: 4 },
-  rezVal: { color: WHITE, fontSize: 13, fontWeight: '900' },
-  rezSub: { color: MUTED, fontSize: 10, marginTop: 2 },
+  rezRow: { flexDirection: 'row', alignItems: 'center', gap: 4, marginBottom: 14 },
+  rezItem: { flex: 1, backgroundColor: BG, borderRadius: 10, padding: 8, alignItems: 'center' },
+  rezLbl: { color: MUTED, fontSize: 8, fontWeight: '700', letterSpacing: 1, marginBottom: 4, textAlign: 'center' },
+  rezVal: { color: WHITE, fontSize: 12, fontWeight: '900', textAlign: 'center' },
+  rezSub: { color: MUTED, fontSize: 9, marginTop: 2, textAlign: 'center' },
   rezPlus: { color: MUTED, fontSize: 16, fontWeight: '900', paddingHorizontal: 2 },
-  consumBar: { backgroundColor: BG, borderRadius: 8, padding: 8, marginTop: 12, alignItems: 'center' },
-  consumTxt: { color: MUTED, fontSize: 11, fontWeight: '600' },
+  totalBox: { backgroundColor: Y, borderRadius: 12, padding: 16, flexDirection: 'row', alignItems: 'center' },
+  totalLbl: { color: BG, fontSize: 9, fontWeight: '700', letterSpacing: 1, marginBottom: 4 },
+  totalVal: { color: BG, fontSize: 20, fontWeight: '900' },
+  totalDivider: { width: 1, height: 40, backgroundColor: BG, opacity: 0.2, marginHorizontal: 16 },
   schCard: { backgroundColor: Y, borderRadius: 14, padding: 20, alignItems: 'center' },
   schLabel: { color: BG, fontSize: 10, fontWeight: '800', letterSpacing: 3, marginBottom: 8 },
   schOra: { color: BG, fontSize: 72, fontWeight: '900', letterSpacing: 4, lineHeight: 76 },
