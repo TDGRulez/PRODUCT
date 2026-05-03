@@ -58,9 +58,8 @@ export default function App() {
     if (isNaN(vOra) || ora === '') { Alert.alert('Atentie', 'Introduceti ora actuala.'); return; }
     if (vOra < 0 || vOra > 23 || vMin < 0 || vMin > 59) { Alert.alert('Eroare', 'Ora invalida.'); return; }
 
-    const consumBaza = vStocBuc / vStocOre;
     const consumMatriteTotal = nrMatrite * vConsumMatrita;
-    const consumTotal = consumBaza + consumMatriteTotal;
+    const consumTotal = consumMatriteTotal;
     const timpConf = vTotalFabric / vRataConf;
     const consumInTimpul = consumTotal * timpConf;
     const stocFinal = vStocBuc + vTotalFabric - consumInTimpul;
@@ -77,7 +76,6 @@ export default function App() {
       stocOre: vStocOre,
       nrMatrite,
       consumMatrita: vConsumMatrita,
-      consumBaza,
       consumMatriteTotal,
       consumTotal,
       totalFabric: Math.round(vTotalFabric),
@@ -111,9 +109,8 @@ export default function App() {
     setIstoric(prev => prev.filter(i => i.id !== id));
   };
 
-  const consumBazaCalc = (parseFloat(stocBuc) > 0 && parseFloat(stocOre) > 0) ? parseFloat(stocBuc) / parseFloat(stocOre) : 0;
   const consumMatriteCalc = nrMatrite * (parseFloat(consumMatrita) || 0);
-  const consumTotalCalc = consumBazaCalc + consumMatriteCalc;
+  const consumTotalCalc = consumMatriteCalc;
 
   return (
     <View style={st.cont}>
@@ -180,18 +177,8 @@ export default function App() {
               {consumTotalCalc > 0 && (
                 <View style={st.infoBox}>
                   <View style={st.infoRow}>
-                    <Text style={st.infoTxt}>Consum stoc:</Text>
-                    <Text style={st.infoVal}>{consumBazaCalc.toFixed(2)} buc/ora</Text>
-                  </View>
-                  {nrMatrite > 0 && consumMatriteCalc > 0 && (
-                    <View style={st.infoRow}>
-                      <Text style={st.infoTxt}>Consum {nrMatrite} matrite:</Text>
-                      <Text style={st.infoVal}>{consumMatriteCalc.toFixed(2)} buc/ora</Text>
-                    </View>
-                  )}
-                  <View style={st.infoRowTotal}>
-                    <Text style={[st.infoTxt, { color: WHITE }]}>Consum TOTAL:</Text>
-                    <Text style={[st.infoVal, { fontSize: 15 }]}>{consumTotalCalc.toFixed(2)} buc/ora</Text>
+                    <Text style={st.infoTxt}>{nrMatrite} matrite × {parseFloat(consumMatrita)||0} buc/h:</Text>
+                    <Text style={st.infoVal}>{consumTotalCalc.toFixed(2)} buc/ora</Text>
                   </View>
                 </View>
               )}
